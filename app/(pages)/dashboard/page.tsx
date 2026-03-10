@@ -4,10 +4,14 @@ import { useAuth } from "@/context/authProvider";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import axios from "axios";
+
 const DashboardPage = () => {
   const { logout, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
+
+  const [reqLoading, setReqLoading] = useState<boolean>(false);
 
   const handleLogout = async () => {
     try {
@@ -18,6 +22,26 @@ const DashboardPage = () => {
       console.log(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendRequest = async () => {
+    setReqLoading(true);
+    try {
+      const res = await axios.post(
+        "/api/test/",
+        { a: "a" },
+        {
+          params: { isActive: true, minAge: 20, search: "sadlkfjsdlkf" },
+        },
+      );
+
+      console.log("SUCCESS =>", res.data);
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      console.log("ERROR =>", errorData);
+    } finally {
+      setReqLoading(false);
     }
   };
 
@@ -79,6 +103,15 @@ const DashboardPage = () => {
               )}
             </button>
           </div>
+
+          <button
+            onClick={sendRequest}
+            className="w-full bg-green-400 text-white p-2 mt-4 rounded-xl cursor-pointer"
+          >
+            <span className="text-xs font-medium  uppercase tracking-wider">
+              {reqLoading ? "loading..." : "post"}
+            </span>
+          </button>
         </div>
       </div>
     </div>

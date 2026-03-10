@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const session = req.cookies.get("session")?.value;
 
-  console.log("SESSION MIDDLEWARE", session);
   const { pathname } = req.nextUrl;
 
   const protectedRoutes = ["/dashboard", "/library"];

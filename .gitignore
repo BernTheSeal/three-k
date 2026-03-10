@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# === Documentation & Notes ===
+notes/
+
+# Internal testing endpoints - DO NOT DEPLOY TO PRODUCTION
+app/api/test/
