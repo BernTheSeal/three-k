@@ -14,8 +14,8 @@ export const withResponse = <R>(
         { success: true, data: responseData },
         { status: statusCode ?? 200 },
       );
-    } catch (error) {
-      let message = "Something went wrong!";
+    } catch (error: any) {
+      let message = "Internal Server Error";
       let status = 500;
 
       if (error instanceof Error) {
