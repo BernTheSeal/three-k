@@ -1,4 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
+import { AppError } from "@/errors/AppError";
+import { HTTP_STATUS } from "@/constants/httpStatus";
 
 export const withResponse = <R>(
   handler: (
@@ -14,15 +16,25 @@ export const withResponse = <R>(
         { success: true, data: responseData },
         { status: statusCode ?? 200 },
       );
-    } catch (error: any) {
+    } catch (err: any) {
+      console.error("ERROR =>", err);
+
       let message = "Internal Server Error";
       let status = 500;
+      let details: unknown[] = [];
+      let code = "UNKNOWN_ERROR";
 
-      if (error instanceof Error) {
-        message = error.message;
+      if (err instanceof AppError && err.isOperational) {
+        message = err.message;
+        status = err.statusCode;
+        details = err.details;
+        code = err.code;
       }
 
-      return NextResponse.json({ success: false, message }, { status });
+      return NextResponse.json(
+        { success: false, message, details, code },
+        { status },
+      );
     }
   };
 };
