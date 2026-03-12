@@ -45,3 +45,4 @@ notes/
 
 # Internal testing endpoints - DO NOT DEPLOY TO PRODUCTION
 app/api/test/
+app/(pages)/test/
