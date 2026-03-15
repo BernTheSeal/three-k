@@ -1,15 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
 import { AppError } from "@/errors/AppError";
-import { HTTP_STATUS } from "@/constants/httpStatus";
+
+import { applyRateLimit, RateLimitType } from "../utils/applyRateLimit";
 
 export const withResponse = <R>(
   handler: (
     req: NextRequest,
     ctx: { params: Promise<unknown> },
   ) => Promise<{ responseData: R; statusCode?: number }>,
+  options?: { rateLimitType: RateLimitType },
 ) => {
   return async (req: NextRequest, context: { params: Promise<unknown> }) => {
     try {
+      await applyRateLimit(req, options?.rateLimitType);
+
       const { responseData, statusCode } = await handler(req, context);
 
       return NextResponse.json(

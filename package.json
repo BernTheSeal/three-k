@@ -10,6 +10,8 @@
     "db:migrate": "npx tsx --env-file=.env.local scripts/migrate.ts"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "axios": "^1.13.6",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",
