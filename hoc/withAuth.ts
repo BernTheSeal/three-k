@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebaseAdmin";
 import { UnauthorizedError } from "@/errors";
+import { query } from "@/lib/db";
 
 export const withAuth = <R, C extends { params: Promise<unknown> }>(
   handler: (
@@ -22,6 +23,19 @@ export const withAuth = <R, C extends { params: Promise<unknown> }>(
       const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
 
       const userId = decoded.uid;
+
+      // Ensures user exists in our DB on every authenticated request.
+      // Handles partial failures where Firebase registration succeeded
+      // but our DB insert failed. ON CONFLICT DO NOTHING makes this idempotent.
+
+      await query(
+        `
+          INSERT INTO users (user_id, email)
+          VALUES ($1, $2)
+          ON CONFLICT (user_id) DO NOTHING
+        `,
+        [userId, decoded.email],
+      );
 
       return await handler(req, { ...context, userId });
     } catch (err: any) {
