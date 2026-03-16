@@ -14,7 +14,7 @@ const migration = {
   },
 
   down: async () => {
-    await query(`DROP TABLE users`);
+    await query(`DROP TABLE IF EXISTS users ON CASCADE`);
   },
 };
 
