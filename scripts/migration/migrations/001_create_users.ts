@@ -1,4 +1,4 @@
-import { query } from "../lib/db";
+import { query } from "@/lib/db";
 
 const migration = {
   version: 1,
@@ -14,7 +14,7 @@ const migration = {
   },
 
   down: async () => {
-    await query(`DROP TABLE IF EXISTS users ON CASCADE`);
+    await query(`DROP TABLE IF EXISTS users CASCADE`);
   },
 };
 

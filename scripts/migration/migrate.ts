@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { query } from "../lib/db";
+import { query } from "@/lib/db";
 import { pathToFileURL } from "url";
 
 interface Migration {
@@ -26,7 +26,7 @@ async function migrate() {
   );
   const executedVersions = executed.rows.map((r) => r.version);
 
-  const migrationsDir = path.join(__dirname, "../", "migrations");
+  const migrationsDir = path.join(__dirname, "/migrations");
 
   const migrationFiles = fs
     .readdirSync(migrationsDir)
@@ -40,7 +40,7 @@ async function migrate() {
       console.log(`Running...: ${file}`);
 
       try {
-        const migrationPath = path.join(__dirname, "../", "migrations", file);
+        const migrationPath = path.join(__dirname, "/migrations", file);
         const migrationModule = await import(pathToFileURL(migrationPath).href);
         const migration = migrationModule.default as Migration;
         const migrationName = file.replace(".ts", "");
