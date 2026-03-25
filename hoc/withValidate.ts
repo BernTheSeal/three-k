@@ -7,7 +7,7 @@ export const withValidate = <R, C extends { params: Promise<unknown> }, T>(
   handler: (
     req: NextRequest,
     context: C & { validatedData: T },
-  ) => Promise<{ responseData: R; statusCode?: number }>,
+  ) => Promise<{ data: R; statusCode?: number }>,
 ) => {
   return async (req: NextRequest, context: C) => {
     try {
@@ -26,6 +26,8 @@ export const withValidate = <R, C extends { params: Promise<unknown> }, T>(
         query,
         params: resolvedParams,
       };
+
+      console.log("REQUESTED DATA =>", requestData);
 
       const validatedData = schema.parse(requestData);
 

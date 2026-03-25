@@ -7,7 +7,7 @@ export const withAuth = <R, C extends { params: Promise<unknown> }>(
   handler: (
     req: NextRequest,
     context: C & { userId: string },
-  ) => Promise<{ responseData: R; statusCode?: number }>,
+  ) => Promise<{ data: R; statusCode?: number }>,
 ) => {
   return async (req: NextRequest, context: C) => {
     try {

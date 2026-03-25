@@ -7,17 +7,17 @@ export const withResponse = <R>(
   handler: (
     req: NextRequest,
     ctx: { params: Promise<unknown> },
-  ) => Promise<{ responseData: R; statusCode?: number }>,
+  ) => Promise<{ data: R; statusCode?: number }>,
   options?: { rateLimitType: RateLimitType },
 ) => {
   return async (req: NextRequest, context: { params: Promise<unknown> }) => {
     try {
       await applyRateLimit(req, options?.rateLimitType);
 
-      const { responseData, statusCode } = await handler(req, context);
+      const { data, statusCode } = await handler(req, context);
 
       return NextResponse.json(
-        { success: true, data: responseData },
+        { success: true, data: data },
         { status: statusCode ?? 200 },
       );
     } catch (err: any) {
