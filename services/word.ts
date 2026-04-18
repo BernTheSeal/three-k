@@ -1,72 +1,106 @@
 import { NotFoundError } from "@/errors";
-import wordRepository from "@/repositories/word";
-import libraryService from "@/services/library";
+import { wordRepository } from "@/repositories/word";
+import { libraryService } from "@/services/library";
+import { userWordService } from "./userWord";
+import { GetWordsInput } from "@/schemas/word";
 
-const getWord = async (word: string) => {
-  const rows = await wordRepository.getByWord(word);
+export const wordService = {
+  async getAll(filters: GetWordsInput) {
+    const LIMIT = 50;
 
-  if (rows.length === 0) {
-    throw new NotFoundError(`${word} is not found!`, "WORD_NOT_FOUND");
-  }
+    // Ensure offset is always a multiple of LIMIT to keep pagination consistent
+    const safeOffset = Math.floor(filters.offset / LIMIT) * LIMIT;
 
-  const firstRow = rows[0];
+    const response = await wordRepository.getAll(filters, {
+      limit: LIMIT,
+      offset: safeOffset,
+    });
 
-  const formattedData = {
-    word_id: firstRow.word_id,
-    word: firstRow.word,
-    phonetics: [
-      ...new Map(
-        rows.map((r) => [
-          r.locale,
-          {
-            locale: r.locale,
-            text: r.text,
-            mp3: r.mp3,
-          },
-        ]),
-      ).values(),
-    ],
-    entries: [
-      ...new Map(
-        rows.map((r) => [r.pos, { pos: r.pos, level: r.level }]),
-      ).values(),
-    ],
-  };
+    const totalCount = response.length > 0 ? response[0].total_words : 0;
 
-  return formattedData;
-};
+    const hasMore = totalCount > safeOffset + LIMIT;
 
-const getWordWithLibrary = async (word: string) => {
-  const wordFromDb = await getWord(word);
+    // Remove the helper 'total_words' column from each row before returning
+    const cleanedWords = response
+      .slice(0, LIMIT)
+      .map(({ total_words, ...rest }) => rest);
 
-  const wordSenses = await libraryService.getWord(word);
+    const nextOffset = safeOffset + LIMIT;
 
-  if (wordSenses) {
-    const dbPosList = wordFromDb.entries.map((e) => e.pos);
-    const apiPosList = Object.keys(wordSenses);
+    return {
+      paginate: { hasMore, nextOffset },
+      totalCount: totalCount,
+      words: cleanedWords,
+    };
+  },
 
-    const missingPos = apiPosList.filter((pos) => !dbPosList.includes(pos));
+  async getByWord(word: string) {
+    const rows = await wordRepository.getByWord(word);
 
-    if (missingPos.length > 0) {
-      console.warn(
-        `[MISSING_POS] ::: word="${word}" missing_pos=${missingPos.join(",")}`,
-      );
+    if (rows.length === 0) {
+      throw new NotFoundError(`${word} is not found!`, "WORD_NOT_FOUND");
     }
-  }
 
-  const unionInfo = {
-    ...wordFromDb,
-    entries: wordFromDb.entries.map((e) => ({
-      pos: e.pos,
-      level: e.level,
-      senses: wordSenses ? (wordSenses[e.pos] ?? []) : [],
-    })),
-  };
+    const firstRow = rows[0];
 
-  return unionInfo;
-};
+    const formattedData = {
+      word_id: firstRow.word_id,
+      word: firstRow.word,
+      phonetics: [
+        ...new Map(
+          rows.map((r) => [
+            r.locale,
+            {
+              locale: r.locale,
+              text: r.text,
+              mp3: r.mp3,
+            },
+          ]),
+        ).values(),
+      ],
+      entries: [
+        ...new Map(
+          rows.map((r) => [r.pos, { pos: r.pos, level: r.level }]),
+        ).values(),
+      ],
+    };
 
-export default {
-  getWord,
-  getWordWithLibrary,
+    return formattedData;
+  },
+
+  async getWordWithLibrary(user_id: string, word: string) {
+    const wordFromDb = await this.getByWord(word);
+
+    const wordSenses = await libraryService.getDefAndExample(word);
+
+    const userWordInfo = await userWordService.getUsersWord(
+      user_id,
+      wordFromDb.word_id,
+    );
+
+    if (wordSenses) {
+      const dbPosList = wordFromDb.entries.map((e) => e.pos);
+      const apiPosList = Object.keys(wordSenses);
+
+      const missingPos = apiPosList.filter((pos) => !dbPosList.includes(pos));
+
+      if (missingPos.length > 0) {
+        console.warn(
+          `[MISSING_POS] ::: word="${word}" missing_pos=${missingPos.join(",")}`,
+        );
+      }
+    }
+
+    const unionInfo = {
+      userInfo: userWordInfo,
+      ...wordFromDb,
+      entries: wordFromDb.entries.map((e) => ({
+        pos: e.pos,
+        level: e.level,
+        senses: wordSenses ? (wordSenses[e.pos] ?? []) : [],
+      })),
+    };
+
+    return unionInfo;
+  },
 };

@@ -6,8 +6,8 @@ import { query } from "@/lib/db";
 export const withAuth = <R, C extends { params: Promise<unknown> }>(
   handler: (
     req: NextRequest,
-    context: C & { userId: string },
-  ) => Promise<{ data: R; statusCode?: number }>,
+    context: C & { user_id: string },
+  ) => Promise<{ data: R; statusCode?: number; message: string }>,
 ) => {
   return async (req: NextRequest, context: C) => {
     try {
@@ -22,7 +22,7 @@ export const withAuth = <R, C extends { params: Promise<unknown> }>(
 
       const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
 
-      const userId = decoded.uid;
+      const user_id = decoded.uid;
 
       // Ensures user exists in our DB on every authenticated request.
       // Handles partial failures where Firebase registration succeeded
@@ -34,10 +34,10 @@ export const withAuth = <R, C extends { params: Promise<unknown> }>(
           VALUES ($1, $2)
           ON CONFLICT (user_id) DO NOTHING
         `,
-        [userId, decoded.email],
+        [user_id, decoded.email],
       );
 
-      return await handler(req, { ...context, userId });
+      return await handler(req, { ...context, user_id });
     } catch (err: any) {
       switch (err.code) {
         case "auth/argument-error":

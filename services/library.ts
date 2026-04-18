@@ -16,44 +16,43 @@ const WordResponseSchema = z.object({
   ),
 });
 
-const getWord = async (word: string) => {
-  try {
-    const res = await axios.get(
-      `https://freedictionaryapi.com/api/v1/entries/en/${word}`,
-      { timeout: 5000 },
-    );
+export const libraryService = {
+  async getDefAndExample(word: string) {
+    try {
+      const res = await axios.get(
+        `https://freedictionaryapi.com/api/v1/entries/en/${word}`,
+        { timeout: 10000 },
+      );
 
-    const result = WordResponseSchema.safeParse(res.data);
+      const result = WordResponseSchema.safeParse(res.data);
 
-    if (!result.success || result.data.entries.length === 0) {
+      if (!result.success || result.data.entries.length === 0) {
+        return null;
+      }
+
+      const formattedData = result.data.entries.reduce(
+        (
+          acc: Record<string, { definition: string; examples: string[] }[]>,
+          d,
+        ) => {
+          const senses = d.senses.map((s) => ({
+            definition: s.definition,
+            examples: s.examples,
+          }));
+
+          acc[d.partOfSpeech] = [
+            ...(acc[d.partOfSpeech] || []),
+            ...senses,
+          ].sort((a, b) => b.examples.length - a.examples.length);
+
+          return acc;
+        },
+        {},
+      );
+
+      return formattedData;
+    } catch (error) {
       return null;
     }
-
-    const formattedData = result.data.entries.reduce(
-      (
-        acc: Record<string, { definition: string; examples: string[] }[]>,
-        d,
-      ) => {
-        const senses = d.senses.map((s) => ({
-          definition: s.definition,
-          examples: s.examples,
-        }));
-
-        acc[d.partOfSpeech] = [...(acc[d.partOfSpeech] || []), ...senses].sort(
-          (a, b) => b.examples.length - a.examples.length,
-        );
-
-        return acc;
-      },
-      {},
-    );
-
-    return formattedData;
-  } catch (error) {
-    return null;
-  }
-};
-
-export default {
-  getWord,
+  },
 };

@@ -1,7 +1,7 @@
 import { withResponse, withAuth, withValidate } from "@/hoc";
 import z from "zod";
 
-import wordServie from "@/services/word";
+import { wordService } from "@/services/word";
 
 const getWordSchema = z.object({
   params: z.object({
@@ -13,9 +13,12 @@ export const GET = withResponse(
   withAuth(
     withValidate(getWordSchema, async (req, context) => {
       const { word } = context.validatedData.params;
-      const result = await wordServie.getWordWithLibrary(word);
+      const user_id = context.user_id;
+
+      const data = await wordService.getWordWithLibrary(user_id, word);
       return {
-        data: result,
+        message: `${data.word}'s informations successfully fetched!`,
+        data,
       };
     }),
   ),

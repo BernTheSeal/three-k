@@ -13,8 +13,6 @@ const DashboardPage = () => {
 
   const [reqLoading, setReqLoading] = useState<boolean>(false);
 
-  const bodyData = { a: 11, b: "s" };
-
   const handleLogout = async () => {
     try {
       setLoading(true);
@@ -30,7 +28,7 @@ const DashboardPage = () => {
   const sendRequest = async () => {
     setReqLoading(true);
     try {
-      const res = await axios.post("/api/test/");
+      const res = await axios.post(`/api/users/words/`);
 
       console.log("SUCCESS =>", res.data);
     } catch (error: any) {

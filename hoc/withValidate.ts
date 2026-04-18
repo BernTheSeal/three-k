@@ -7,7 +7,7 @@ export const withValidate = <R, C extends { params: Promise<unknown> }, T>(
   handler: (
     req: NextRequest,
     context: C & { validatedData: T },
-  ) => Promise<{ data: R; statusCode?: number }>,
+  ) => Promise<{ data: R; statusCode?: number; message: string }>,
 ) => {
   return async (req: NextRequest, context: C) => {
     try {
@@ -15,7 +15,19 @@ export const withValidate = <R, C extends { params: Promise<unknown> }, T>(
       const body = rawBody && Object.keys(rawBody).length > 0 ? rawBody : {};
 
       const { searchParams } = new URL(req.url);
-      const query = Object.fromEntries(searchParams.entries());
+
+      const query: Record<string, unknown> = {};
+      searchParams.forEach((value, key) => {
+        if (Object.hasOwn(query, key)) {
+          if (Array.isArray(query[key])) {
+            query[key].push(value);
+          } else {
+            query[key] = [query[key], value];
+          }
+        } else {
+          query[key] = value;
+        }
+      });
 
       const myParams = await context.params;
       const resolvedParams =
@@ -26,8 +38,6 @@ export const withValidate = <R, C extends { params: Promise<unknown> }, T>(
         query,
         params: resolvedParams,
       };
-
-      console.log("REQUESTED DATA =>", requestData);
 
       const validatedData = schema.parse(requestData);
 

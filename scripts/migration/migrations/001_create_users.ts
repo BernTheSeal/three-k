@@ -5,7 +5,7 @@ const migration = {
 
   up: async () => {
     await query(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         user_id VARCHAR(128) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
