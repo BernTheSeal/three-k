@@ -19,7 +19,6 @@ const DashboardPage = () => {
       await logout();
       router.push("/");
     } catch (err: any) {
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -28,7 +27,9 @@ const DashboardPage = () => {
   const sendRequest = async () => {
     setReqLoading(true);
     try {
-      const res = await axios.post(`/api/users/words/`);
+      const res = await axios.post(`/api/test`, {
+        deneme: "1",
+      });
 
       console.log("SUCCESS =>", res.data);
     } catch (error: any) {

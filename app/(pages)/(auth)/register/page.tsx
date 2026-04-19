@@ -20,7 +20,6 @@ export default function RegisterPage() {
 
       router.push("/dashboard");
     } catch (err: any) {
-      console.error(err);
     } finally {
       setLoading(false);
     }

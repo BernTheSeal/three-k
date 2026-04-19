@@ -3,7 +3,7 @@ import {
   CreateUserWordInput,
   GetUserWordInput,
   UpdateUserWordInput,
-} from "@/schemas/userWord";
+} from "@/schemas/validators/userWord";
 
 import { BadRequestError, NotFoundError } from "@/errors";
 
@@ -52,9 +52,10 @@ export const userWordService = {
 
   async getUsersWords(user_id: string, filters: GetUserWordInput) {
     const LIMIT = 50;
+    const offset = filters.offset ? filters.offset : 0;
 
     // Ensure offset is always a multiple of 50 to keep pagination consistent
-    const safeOffset = Math.floor(filters.offset / LIMIT) * LIMIT;
+    const safeOffset = Math.floor(offset / LIMIT) * LIMIT;
 
     const response = await userWordRepository.getByUserId(user_id, filters, {
       limit: LIMIT,

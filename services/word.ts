@@ -2,14 +2,15 @@ import { NotFoundError } from "@/errors";
 import { wordRepository } from "@/repositories/word";
 import { libraryService } from "@/services/library";
 import { userWordService } from "./userWord";
-import { GetWordsInput } from "@/schemas/word";
+import { GetWordsInput } from "@/schemas/validators/word";
 
 export const wordService = {
   async getAll(filters: GetWordsInput) {
     const LIMIT = 50;
+    const offset = filters.offset ? filters.offset : 0;
 
     // Ensure offset is always a multiple of LIMIT to keep pagination consistent
-    const safeOffset = Math.floor(filters.offset / LIMIT) * LIMIT;
+    const safeOffset = Math.floor(offset / LIMIT) * LIMIT;
 
     const response = await wordRepository.getAll(filters, {
       limit: LIMIT,

@@ -1,17 +1,12 @@
 import { withResponse, withAuth, withValidate } from "@/hoc";
-import z from "zod";
 
 import { wordService } from "@/services/word";
 
-const getWordSchema = z.object({
-  params: z.object({
-    word: z.string(),
-  }),
-});
+import { wordGetSchema } from "@/schemas/validators/word";
 
 export const GET = withResponse(
   withAuth(
-    withValidate(getWordSchema, async (req, context) => {
+    withValidate(wordGetSchema, async (req, context) => {
       const { word } = context.validatedData.params;
       const user_id = context.user_id;
 

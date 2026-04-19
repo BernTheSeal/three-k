@@ -4,7 +4,7 @@ import {
   userWordsPostSchema,
   userWordGetSchema,
   userWordPatchSchema,
-} from "@/schemas/userWord";
+} from "@/schemas/validators/userWord";
 
 export const GET = withResponse(
   withAuth(

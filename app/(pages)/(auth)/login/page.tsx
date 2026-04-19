@@ -21,7 +21,6 @@ export default function LoginPage() {
 
       router.push("/dashboard");
     } catch (err: any) {
-      console.error(err);
     } finally {
       setLoading(false);
     }

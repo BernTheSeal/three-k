@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
-import { GetByWord, GetAll } from "@/schemas/word";
-import { GetWordsInput } from "@/schemas/word";
+import { GetByWord, GetAll } from "@/schemas/validators/word";
+import { GetWordsInput } from "@/schemas/validators/word";
 
 export const wordRepository = {
   async getAll(
@@ -10,8 +10,9 @@ export const wordRepository = {
     const { search } = filters;
 
     const { offset, limit } = paginate;
-    const pos = filters.pos.length > 0 ? filters.pos : null;
-    const levels = filters.levels.length > 0 ? filters.levels : null;
+
+    const pos = filters.pos ? filters.pos : null;
+    const levels = filters.levels ? filters.levels : null;
 
     const result = await query<GetAll>(
       `

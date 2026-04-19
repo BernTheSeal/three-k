@@ -3,8 +3,12 @@ import {
   CreateUserWordInput,
   GetUserWordInput,
   UpdateUserWordInput,
-} from "@/schemas/userWord";
-import { GetByUserIdAndWordId, GetByUserId } from "@/schemas/userWord";
+} from "@/schemas/validators/userWord";
+
+import {
+  GetByUserIdAndWordId,
+  GetByUserId,
+} from "@/schemas/validators/userWord";
 
 export const userWordRepository = {
   async create(user_id: string, data: CreateUserWordInput) {
@@ -92,8 +96,11 @@ export const userWordRepository = {
     filters: Omit<GetUserWordInput, "offset">,
     paginate: { limit: number; offset: number },
   ) {
-    const { search, status, is_favorite } = filters;
     const { limit, offset } = paginate;
+
+    const search = filters.search ? filters.search : null;
+    const status = filters.status ? filters.status : null;
+    const is_favorite = filters.is_favorite ? filters.is_favorite : null;
 
     const result = await query<GetByUserId>(
       `
@@ -113,14 +120,7 @@ export const userWordRepository = {
       ORDER BY w.word 
       LIMIT $5 OFFSET $6
     `,
-      [
-        user_id,
-        search ?? null,
-        status ?? null,
-        is_favorite ?? null,
-        limit + 1,
-        offset,
-      ],
+      [user_id, search, status, is_favorite, limit + 1, offset],
     );
 
     return result.rows;

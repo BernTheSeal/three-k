@@ -1,5 +1,8 @@
 import { withResponse, withAuth, withValidate } from "@/hoc";
-import { userWordPatchSchema, userWordDeleteSchema } from "@/schemas/userWord";
+import {
+  userWordPatchSchema,
+  userWordDeleteSchema,
+} from "@/schemas/validators/userWord";
 import { userWordService } from "@/services/userWord";
 
 export const PATCH = withResponse(
