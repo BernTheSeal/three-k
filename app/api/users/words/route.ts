@@ -3,7 +3,6 @@ import { userWordService } from "@/services/userWord";
 import {
   userWordsPostSchema,
   userWordGetSchema,
-  userWordPatchSchema,
 } from "@/schemas/validators/userWord";
 
 export const GET = withResponse(

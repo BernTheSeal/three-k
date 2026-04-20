@@ -1,10 +1,10 @@
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
 const migration = {
   version: 2,
 
-  up: async () => {
-    await query(`
+  up: async (client: PoolClient) => {
+    await client.query(`
         CREATE TABLE IF NOT EXISTS words (
             word_id serial PRIMARY KEY,
             word varchar UNIQUE NOT NULL
@@ -23,8 +23,8 @@ const migration = {
     `);
   },
 
-  down: async () => {
-    await query(`
+  down: async (client: PoolClient) => {
+    await client.query(`
         DROP TABLE IF EXISTS levels CASCADE;
         DROP TABLE IF EXISTS pos CASCADE;
         DROP TABLE IF EXISTS words CASCADE;    

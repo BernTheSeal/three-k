@@ -1,12 +1,12 @@
 import first_3000_word from "../import/first_3000_words.json";
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
-export const seedWordPosLevels = async () => {
+export const seedWordPosLevels = async (client: PoolClient) => {
   console.log("📝 Seeding word pos levels...");
 
-  const wordsRes = await query(`SELECT word_id, word FROM words`);
-  const posRes = await query(`SELECT pos_id, pos FROM pos`);
-  const levelsRes = await query(`SELECT level_id, level FROM levels`);
+  const wordsRes = await client.query(`SELECT word_id, word FROM words`);
+  const posRes = await client.query(`SELECT pos_id, pos FROM pos`);
+  const levelsRes = await client.query(`SELECT level_id, level FROM levels`);
 
   const wordMap = Object.fromEntries(
     wordsRes.rows.map((r) => [r.word, r.word_id]),
@@ -26,7 +26,7 @@ export const seedWordPosLevels = async () => {
       const pos_id = posMap[detail.pos];
       const level_id = levelMap[detail.level];
 
-      await query(
+      await client.query(
         `INSERT INTO word_pos_levels (word_id, pos_id, level_id) VALUES($1, $2, $3)`,
         [word_id, pos_id, level_id],
       );

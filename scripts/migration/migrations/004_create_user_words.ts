@@ -1,10 +1,10 @@
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
 const migration = {
   version: 4,
 
-  up: async () => {
-    await query(`
+  up: async (client: PoolClient) => {
+    await client.query(`
         DO $$ BEGIN     
             CREATE TYPE status_enum AS ENUM ('learning', 'known');
         EXCEPTION   
@@ -27,8 +27,8 @@ const migration = {
     `);
   },
 
-  down: async () => {
-    await query(`
+  down: async (client: PoolClient) => {
+    await client.query(`
         DROP TABLE IF EXISTS user_words CASCADE;
         DROP TYPE IF EXISTS status_enum;
     `);

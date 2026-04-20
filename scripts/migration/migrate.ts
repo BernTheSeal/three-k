@@ -1,18 +1,20 @@
 import fs from "fs";
 import path from "path";
-import { query } from "@/lib/db";
 import { pathToFileURL } from "url";
+import { withTransaction } from "@/lib/db";
+import { PoolClient } from "pg";
 
 interface Migration {
   version: number;
-  up: () => Promise<void>;
-  down?: () => Promise<void>;
+  up: (client: PoolClient) => Promise<void>;
+  down?: (client: PoolClient) => Promise<void>;
 }
 
 async function migrate() {
   console.log("Migration starting...\n");
 
-  await query(`
+  await withTransaction(async (client) => {
+    await client.query(`
     CREATE TABLE IF NOT EXISTS migrations (
       id SERIAL PRIMARY KEY,
       version INTEGER UNIQUE NOT NULL,
@@ -21,54 +23,51 @@ async function migrate() {
     )
   `);
 
-  const executed = await query<{ version: number }>(
-    "SELECT version FROM migrations ORDER BY version",
-  );
-  const executedVersions = executed.rows.map((r) => r.version);
+    const executed = await client.query<{ version: number }>(
+      "SELECT version FROM migrations ORDER BY version",
+    );
+    const executedVersions = executed.rows.map((r) => r.version);
 
-  const migrationsDir = path.join(__dirname, "/migrations");
+    const migrationsDir = path.join(__dirname, "/migrations");
 
-  const migrationFiles = fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith(".ts"))
-    .sort();
+    const migrationFiles = fs
+      .readdirSync(migrationsDir)
+      .filter((f) => f.endsWith(".ts"))
+      .sort();
+    for (const file of migrationFiles) {
+      const version = parseInt(file.split("_")[0]);
 
-  for (const file of migrationFiles) {
-    const version = parseInt(file.split("_")[0]);
+      if (!executedVersions.includes(version)) {
+        console.log(`Running...: ${file}`);
 
-    if (!executedVersions.includes(version)) {
-      console.log(`Running...: ${file}`);
+        try {
+          const migrationPath = path.join(__dirname, "/migrations", file);
+          const migrationModule = await import(
+            pathToFileURL(migrationPath).href
+          );
+          const migration = migrationModule.default as Migration;
+          const migrationName = file.replace(".ts", "");
 
-      try {
-        const migrationPath = path.join(__dirname, "/migrations", file);
-        const migrationModule = await import(pathToFileURL(migrationPath).href);
-        const migration = migrationModule.default as Migration;
-        const migrationName = file.replace(".ts", "");
+          await migration.up(client);
 
-        await query("BEGIN");
+          await client.query(
+            "INSERT INTO migrations (version, name) VALUES ($1, $2)",
+            [version, migrationName],
+          );
 
-        await migration.up();
-
-        await query("INSERT INTO migrations (version, name) VALUES ($1, $2)", [
-          version,
-          migrationName,
-        ]);
-
-        await query("COMMIT");
-
-        console.log(`${file} completed successfully`);
-      } catch (error) {
-        await query("ROLLBACK");
-        console.error(
-          `${file} failed:`,
-          error instanceof Error ? error.message : error,
-        );
-        process.exit(1);
+          console.log(`${file} completed successfully`);
+        } catch (error) {
+          console.error(
+            `${file} failed:`,
+            error instanceof Error ? error.message : error,
+          );
+          process.exit(1);
+        }
+      } else {
+        console.log(`-> Skipping ${file} (already executed)`);
       }
-    } else {
-      console.log(`-> Skipping ${file} (already executed)`);
     }
-  }
+  });
 
   console.log("Migration completed successfully!");
   process.exit(0);

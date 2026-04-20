@@ -1,7 +1,7 @@
 import first_3000_word from "../import/first_3000_words.json";
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
-export const seedPos = async () => {
+export const seedPos = async (client: PoolClient) => {
   console.log("📝 Seeding pos...");
 
   const pos = [
@@ -10,7 +10,7 @@ export const seedPos = async () => {
   const total = pos.length;
 
   for (let i = 0; i < total; i++) {
-    await query(`INSERT INTO pos (pos) VALUES ($1)`, [pos[i]]);
+    await client.query(`INSERT INTO pos (pos) VALUES ($1)`, [pos[i]]);
 
     process.stdout.write(`\r ${i + 1}/${total} pos inserted...`);
   }

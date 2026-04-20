@@ -6,8 +6,10 @@ import {
   seedWordPosLevels,
 } from "./data";
 
-import { query } from "@/lib/db";
 import readline from "readline";
+
+import { withTransaction } from "@/lib/db";
+import { PoolClient } from "pg";
 
 const confirm = async (message: string): Promise<boolean> => {
   const rl = readline.createInterface({
@@ -23,7 +25,7 @@ const confirm = async (message: string): Promise<boolean> => {
   });
 };
 
-const truncateTables = async () => {
+const truncateTables = async (client: PoolClient) => {
   const tables = [
     "word_pos_levels",
     "word_phonetics",
@@ -35,7 +37,7 @@ const truncateTables = async () => {
   console.log("🗑️ Truncating tables...");
 
   for (const table of tables) {
-    const exists = await query(
+    const exists = await client.query(
       `SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_name = $1
@@ -48,7 +50,7 @@ const truncateTables = async () => {
       continue;
     }
 
-    await query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
+    await client.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
     console.log(`   ✓ ${table} cleared`);
   }
 
@@ -70,21 +72,18 @@ export const seed = async () => {
   console.log("Starting seed operation...");
 
   try {
-    await query("BEGIN");
+    await withTransaction(async (client) => {
+      await truncateTables(client);
+      await seedWords(client);
+      await seedPos(client);
+      await seedLevels(client);
+      await seedWordPhonetics(client);
+      await seedWordPosLevels(client);
+    });
 
-    await truncateTables();
-
-    await seedWords();
-    await seedPos();
-    await seedLevels();
-    await seedWordPhonetics();
-    await seedWordPosLevels();
-
-    await query("COMMIT");
     console.log("✅ Seed operation completed successfully.");
     process.exit(0);
   } catch (err) {
-    await query("ROLLBACK");
     console.error("❌ Seed operation failed:", err);
     process.exit(1);
   }

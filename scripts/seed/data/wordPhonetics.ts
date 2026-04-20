@@ -1,7 +1,7 @@
 import first_3000_word from "../import/first_3000_words.json";
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
-export const seedWordPhonetics = async () => {
+export const seedWordPhonetics = async (client: PoolClient) => {
   console.log("📝 Seeding words phonetics...");
 
   const words = first_3000_word;
@@ -10,14 +10,15 @@ export const seedWordPhonetics = async () => {
   for (let i = 0; i < words.length; i++) {
     const word = words[i].word;
 
-    const result = await query(`SELECT word_id FROM words WHERE word = $1`, [
-      word,
-    ]);
+    const result = await client.query(
+      `SELECT word_id FROM words WHERE word = $1`,
+      [word],
+    );
 
     const word_id = result.rows[0].word_id;
 
     for (const [locale, val] of Object.entries(words[i].phonetics)) {
-      await query(
+      await client.query(
         `INSERT INTO word_phonetics (word_id, locale, text, mp3) VALUES($1, $2, $3, $4)`,
         [word_id, locale, val.text, val.mp3],
       );

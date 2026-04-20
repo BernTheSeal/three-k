@@ -1,10 +1,10 @@
-import { query } from "@/lib/db";
+import { PoolClient } from "pg";
 
 const migration = {
   version: 3,
 
-  up: async () => {
-    await query(`
+  up: async (client: PoolClient) => {
+    await client.query(`
         CREATE TABLE IF NOT EXISTS word_phonetics (
             word_id integer REFERENCES words(word_id),
             locale varchar NOT NULL,
@@ -21,8 +21,8 @@ const migration = {
     `);
   },
 
-  down: async () => {
-    await query(`
+  down: async (client: PoolClient) => {
+    await client.query(`
         DROP TABLE IF EXISTS word_phonetics CASCADE;
         DROP TABLE IF EXISTS word_pos_levels CASCADE;
     `);
